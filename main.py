@@ -1,6 +1,9 @@
 import discord
+from dotenv import load_dotenv
 import logging
 import os
+
+load_dotenv()
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -19,7 +22,7 @@ class MyClient(discord.Client):
 intents = discord.Intents.default()
 intents.presences = True
 
-discord_client_key = os.environ.get('DISCORD_CLIENT_SECRET')
+discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
 
 client = MyClient()
-client.run(discord_client_secret)
+client.run(discord_client_token)
