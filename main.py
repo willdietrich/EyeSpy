@@ -1,5 +1,6 @@
 import discord
 import logging
+import os
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -18,5 +19,7 @@ class MyClient(discord.Client):
 intents = discord.Intents.default()
 intents.presences = True
 
+discord_client_key = os.environ.get('DISCORD_CLIENT_SECRET')
+
 client = MyClient()
-client.run(/* My Key */)
+client.run(discord_client_secret)
