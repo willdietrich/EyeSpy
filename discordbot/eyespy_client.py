@@ -1,12 +1,14 @@
-import discord
 import logging
+
+import discord
+
 
 class EyeSpyClient(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger('discord')
         self.logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(filename='../discord.log', encoding='utf-8', mode='w')
+        handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
         handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
         self.logger.addHandler(handler)
 

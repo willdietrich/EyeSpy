@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 
+from api.routers import users
+
 app = FastAPI()
 
-@app.get("/")
+app.include_router(users.router)
+
+
+@app.get("/", status_code=200)
 def read_root():
-    return {"Hello": "World"}
+    return {"message": "Hello, World!"}

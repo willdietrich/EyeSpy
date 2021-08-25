@@ -1,8 +1,13 @@
-import discord
-from dotenv import load_dotenv
-from discordbot.eyespy_client import EyeSpyClient
+import asyncio
 import os
+from multiprocessing import Process
+
+
+import discord
 import uvicorn
+from dotenv import load_dotenv
+
+from discordbot.eyespy_client import EyeSpyClient
 
 
 def init_discord_client():
@@ -13,13 +18,18 @@ def init_discord_client():
     intents.members = True
 
     client = EyeSpyClient(intents=intents)
-    client.run(discord_client_token)
+    asyncio.run(client.run(discord_client_token))
+
 
 def init_api():
     uvicorn.run("api.api:app", host="127.0.0.1", port=8000, log_level="info")
 
+
 if __name__ == "__main__":
     load_dotenv()
 
-    init_discord_client()
-    init_api()
+    client = Process(target=init_discord_client)
+    client.start()
+
+    api = Process(target=init_api)
+    api.start()
