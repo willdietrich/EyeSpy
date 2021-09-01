@@ -1,12 +1,9 @@
 import asyncio
 import os
 from multiprocessing import Process
-
-
 import discord
 import uvicorn
 from dotenv import load_dotenv
-
 from discordbot.eyespy_client import EyeSpyClient
 
 
