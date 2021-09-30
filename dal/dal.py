@@ -2,6 +2,7 @@ import sqlite3
 from time import time
 from .decorators.dal_execute import dal_execute
 from .decorators.dal_retrieve import dal_retrieve
+from .decorators.dal_execute_param import dal_execute_param
 import discord
 
 
@@ -13,9 +14,9 @@ class Dal:
 
     @dal_execute
     def _init_table(self):
-        return 'CREATE TABLE IF NOT EXISTS discord_status (username text NOT NULL, status text, activity text, timestamp integer);'
+        return 'CREATE TABLE IF NOT EXISTS discord_status (username text NOT NULL, status text, activity text, timestamp integer)'
 
-    @dal_execute
+    @dal_execute_param
     def insert_status(self, before: discord.member, after: discord.member):
         username = before.name
         status = {
@@ -27,8 +28,10 @@ class Dal:
             'activity_after': after.activity
         }
         timestamp = int(time())
-        status_insert_sql = f'INSERT INTO discord_status (?, ?, ?, ?) VALUES ({username}, "{str(status)}", "{str(activity)}", {timestamp});'
-        return status_insert_sql
+        insert_stmt = 'INSERT INTO discord_status VALUES (?, ?, ?, ?)'
+        insert_data = (username, str(status), str(activity), timestamp)
+
+        return insert_stmt, insert_data
 
     @dal_retrieve
     def get_status(self, ):

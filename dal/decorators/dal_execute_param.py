@@ -1,12 +1,12 @@
 import sqlite3
 
 
-def dal_execute(func):
+def dal_execute_param(func):
     def _decorate(*args):
         db: sqlite3.Connection = args[0].db
-        response: str = func(*args)
+        query, data = func(*args)
 
-        db.cursor().execute(response)
+        db.cursor().execute(query, data)
         db.commit()
 
     return _decorate
