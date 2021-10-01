@@ -17,4 +17,4 @@ starlette==0.14.2
 typing-extensions==3.10.0.0
 uvicorn==0.15.0
 yarl==1.6.3
-zipp==3.5.
+zipp==3.5.0

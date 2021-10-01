@@ -1,10 +1,12 @@
 import asyncio
 import os
+import sqlite3
 from multiprocessing import Process
 import discord
 import uvicorn
 from dotenv import load_dotenv
 from discordbot.eyespy_client import EyeSpyClient
+from dal.dal import Dal
 
 
 def init_discord_client():
@@ -14,7 +16,7 @@ def init_discord_client():
     intents.presences = True
     intents.members = True
 
-    client = EyeSpyClient(intents=intents)
+    client = EyeSpyClient(dal=dal, intents=intents)
     asyncio.run(client.run(discord_client_token))
 
 
@@ -25,8 +27,11 @@ def init_api():
 if __name__ == "__main__":
     load_dotenv()
 
-    client = Process(target=init_discord_client)
-    client.start()
+    dal = Dal(sqlite3.connect('discord.db'))
 
-    api = Process(target=init_api)
-    api.start()
+    # client = Process(target=init_discord_client)
+    # client.start()
+    init_discord_client()
+
+    # api = Process(target=init_api)
+    # api.start()
