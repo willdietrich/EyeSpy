@@ -41,6 +41,19 @@ def upgrade():
                   nullable=False)
     )
 
+    op.create_table(
+        'discord_status',
+        sa.Column('username',
+                  sa.TEXT,
+                  nullable=False),
+        sa.Column('status',
+                  sa.TEXT),
+        sa.Column('activity',
+                  sa.TEXT),
+        sa.Column('timestamp',
+                  sa.INTEGER)
+    )
+
 
 def downgrade():
     op.drop_table('DiscordSpys')
