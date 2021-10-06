@@ -27,7 +27,7 @@ def init_api():
 if __name__ == "__main__":
     load_dotenv()
 
-    dal = Dal(sqlite3.connect('discord.db'))
+    dal = Dal(sqlite3.connect('eyespy.db'))
 
     # client = Process(target=init_discord_client)
     # client.start()

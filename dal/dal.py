@@ -10,11 +10,6 @@ class Dal:
     def __init__(self, db: sqlite3.Connection, *args, **kwargs):
         self.db = db
         self.cursor = self.db.cursor()
-        self._init_table()
-
-    @dal_execute
-    def _init_table(self):
-        return 'CREATE TABLE IF NOT EXISTS discord_status (username text NOT NULL, status text, activity text, timestamp integer)'
 
     @dal_execute_param
     def insert_status(self, before: discord.member, after: discord.member):
@@ -28,7 +23,7 @@ class Dal:
             'activity_after': after.activity
         }
         timestamp = int(time())
-        insert_stmt = 'INSERT INTO discord_status VALUES (?, ?, ?, ?)'
+        insert_stmt = 'INSERT INTO discord_status(username, status, activity, timestamp) VALUES (?, ?, ?, ?)'
         insert_data = (username, str(status), str(activity), timestamp)
 
         return insert_stmt, insert_data

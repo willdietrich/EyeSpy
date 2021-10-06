@@ -11,7 +11,12 @@ Install requirements with `pip` using `pip install -r requirements.txt` from the
 - FastAPI (API backend)
 - Uvicorn (API host)
 - SQLite 3 (DB)
+- Alembic (DB Migration Tool)
 - Typescript + React (UI Project)
 
+## Setup
+Before running app, run `alembic upgrade head` to migrate the DB
+
 ## Arch Diagram
-![image](https://user-images.githubusercontent.com/2119242/130667252-50779765-e1de-47b4-8772-0ef3796b503b.png)
+<img width="779" alt="Screen Shot 2021-10-01 at 11 53 45 AM" src="https://user-images.githubusercontent.com/2119242/135658625-d00f53b5-fe75-4bfc-8822-9986463215ab.png">
+
