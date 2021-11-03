@@ -1,9 +1,7 @@
 import sqlite3
 from time import time
-from .decorators.dal_execute import dal_execute
 from .decorators.dal_retrieve import dal_retrieve
 from .decorators.dal_execute_param import dal_execute_param
-import discord
 
 
 class Dal:
@@ -12,7 +10,7 @@ class Dal:
         self.cursor = self.db.cursor()
 
     @dal_execute_param
-    def insert_status(self, before: discord.member, after: discord.member):
+    def insert_status(self, before, after):
         username = before.name
         status = {
             'status_before': before.raw_status,
