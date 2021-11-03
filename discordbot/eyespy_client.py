@@ -13,7 +13,7 @@ class EyeSpyClient(hikari.GatewayBot):
         self.event_manager.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.event_manager.subscribe(hikari.DMMessageCreateEvent, self.on_message)
 
-        self.logger = logging.getLogger('discord')
+        self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
         handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
         handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
