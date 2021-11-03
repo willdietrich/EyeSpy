@@ -11,7 +11,7 @@ def init_discord_client():
     discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
 
     client = EyeSpyClient(dal=dal, token=discord_client_token)
-    Process.run(client.run())
+    client.run()
 
 
 def init_api():
