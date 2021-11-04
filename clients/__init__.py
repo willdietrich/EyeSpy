@@ -1,0 +1,2 @@
+from eyespy_gateway_client import EyeSpyClient
+from rest_client import DiscordRestClient

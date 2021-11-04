@@ -1,17 +1,22 @@
 import logging
+
 import hikari
+
+from clients import DiscordRestClient
 from dal.dal import Dal
 
 
 class EyeSpyClient(hikari.GatewayBot):
-    def __init__(self, dal: Dal, token: str, *args, **kwargs):
+    def __init__(self, dal: Dal, rest_client: DiscordRestClient, token: str, *args, **kwargs):
         self.dal = dal
+        self.rest_client = rest_client
         super().__init__(intents=hikari.Intents.ALL, token=token)
 
         self.event_manager.subscribe(hikari.StartingEvent, self.on_starting)
         self.event_manager.subscribe(hikari.StartedEvent, self.on_started)
         self.event_manager.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.event_manager.subscribe(hikari.DMMessageCreateEvent, self.on_message)
+        self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
 
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
@@ -35,6 +40,6 @@ class EyeSpyClient(hikari.GatewayBot):
         if event.content.lower() == "chungus":
             await event.message.respond("He's a great big boi.")
 
-    # async def on_member_update(self, before: discord.member, after: discord.member):
-    #     self.logger.info(f'type: Activity Change, user: {before.name}, status before: {before.raw_status}, status after: {after.raw_status}, activity before: {before.activity}, activity after: {after.activity}')
-    #     self.dal.insert_status(before, after)
+    async def presence_update(self, event: hikari.PresenceUpdateEvent):
+        self.logger.info('Update received. old presence: {0}, new presence: {1}'.format(event.old_presence, event.presence))
+        # self.dal.insert_status(before, after)
