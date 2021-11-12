@@ -1,6 +1,6 @@
 import sqlite3
 from time import time
-from decorators import dal_execute_param, dal_retrieve
+from dal.decorators import dal_execute_param, dal_retrieve
 
 
 class Dal:

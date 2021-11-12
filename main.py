@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sqlite3
 
@@ -5,15 +6,14 @@ import sqlite3
 import uvicorn
 from dotenv import load_dotenv
 
-from clients import EyeSpyClient, DiscordRestClient
+from clients import EyeSpyClient
 from dal import Dal
 
 
 def init_discord_client():
     discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
 
-    rest_client = DiscordRestClient(token=discord_client_token)
-    client = EyeSpyClient(dal=dal, rest_client=rest_client, token=discord_client_token)
+    client = EyeSpyClient(dal=dal, token=discord_client_token)
     client.run()
 
 
