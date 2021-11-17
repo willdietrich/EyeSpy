@@ -6,8 +6,8 @@
 ## Requirements
 Install requirements with `pip` using `pip install -r requirements.txt` from the root of the EyeSpy directory
 
-- Python >= 3.8
-- discord.py (Discord interaction)
+- Python >= 3.10
+- Hikari-Py (Discord interaction)
 - FastAPI (API backend)
 - Uvicorn (API host)
 - SQLite 3 (DB)
@@ -18,5 +18,6 @@ Install requirements with `pip` using `pip install -r requirements.txt` from the
 Before running app, run `alembic upgrade head` to migrate the DB
 
 ## Arch Diagram
-<img width="779" alt="Screen Shot 2021-10-01 at 11 53 45 AM" src="https://user-images.githubusercontent.com/2119242/135658625-d00f53b5-fe75-4bfc-8822-9986463215ab.png">
+![image](https://user-images.githubusercontent.com/2119242/142131384-ea3d072f-9866-41c7-90ac-7b2f437e76cc.png)
+
 
