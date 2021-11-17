@@ -1,14 +1,16 @@
 import logging
 
 import hikari
+import lightbulb
+from lightbulb import commands
 
 from dal.dal import Dal
 
 
-class EyeSpyClient(hikari.GatewayBot):
+class EyeSpyClient(lightbulb.BotApp):
     def __init__(self, dal: Dal, token: str, *args, **kwargs):
         self.dal = dal
-        super().__init__(intents=hikari.Intents.ALL, token=token)
+        super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
         # Initialize events
         self.event_manager.subscribe(hikari.StartingEvent, self.on_starting)
@@ -17,12 +19,16 @@ class EyeSpyClient(hikari.GatewayBot):
         self.event_manager.subscribe(hikari.DMMessageCreateEvent, self.on_message)
         self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
 
+        # Initialize commands
+        self.command(self.echo)
+
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
         handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
         handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
         self.logger.addHandler(handler)
 
+    # Gateway listeners
     async def on_starting(self, event: hikari.StartingEvent):
         self.logger.info('Starting up', stack_info=True)
 
@@ -44,3 +50,10 @@ class EyeSpyClient(hikari.GatewayBot):
         user = await self.rest.fetch_user(event.user_id)
         self.logger.info('User Info: {0}'.format(user))
         # self.dal.insert_status(before, after)
+
+    # Commands
+    @lightbulb.option("text", "text to repeat")
+    @lightbulb.command("echo", "repeats the given text")
+    @lightbulb.implements(commands.SlashCommand)
+    async def echo(ctx):
+        await ctx.respond(ctx.options.text)
