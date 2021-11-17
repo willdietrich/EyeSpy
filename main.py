@@ -1,23 +1,20 @@
 import asyncio
 import os
 import sqlite3
-from multiprocessing import Process
-import discord
+
+# from multiprocessing import Process
 import uvicorn
 from dotenv import load_dotenv
-from discordbot.eyespy_client import EyeSpyClient
-from dal.dal import Dal
+
+from clients import EyeSpyClient
+from dal import Dal
 
 
 def init_discord_client():
     discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
 
-    intents = discord.Intents.default()
-    intents.presences = True
-    intents.members = True
-
-    client = EyeSpyClient(dal=dal, intents=intents)
-    asyncio.run(client.run(discord_client_token))
+    client = EyeSpyClient(dal=dal, token=discord_client_token)
+    client.run()
 
 
 def init_api():
