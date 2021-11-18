@@ -4,12 +4,13 @@ import hikari
 import lightbulb
 from lightbulb import commands
 
-from dal.dal import Dal
+import managers
+from models import SpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):
-    def __init__(self, dal: Dal, token: str, *args, **kwargs):
-        self.dal = dal
+    def __init__(self, manager: managers.EyeSpyManager, token: str, *args, **kwargs):
+        self.manager = manager
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
         # Initialize events
@@ -20,7 +21,7 @@ class EyeSpyClient(lightbulb.BotApp):
         self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
 
         # Initialize commands
-        self.command(self.echo)
+        self.command(self.follow)
 
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
@@ -46,14 +47,20 @@ class EyeSpyClient(lightbulb.BotApp):
             await event.message.respond("He's a great big boi.")
 
     async def presence_update(self, event: hikari.PresenceUpdateEvent):
-        self.logger.info('Update received. old presence: {0}, new presence: {1}'.format(event.old_presence, event.presence))
-        user = await self.rest.fetch_user(event.user_id)
-        self.logger.info('User Info: {0}'.format(user))
+        return
+        # self.logger.info('Update received. old presence: {0}, new presence: {1}'.format(event.old_presence, event.presence))
+        # user = await self.rest.fetch_user(event.user_id)
+        # channel = await self.rest.create_dm_channel(347853274352844803)
+        # await self.rest.create_message(channel, f'User status change: {user.username}')
         # self.dal.insert_status(before, after)
 
     # Commands
-    @lightbulb.option("text", "text to repeat")
-    @lightbulb.command("echo", "repeats the given text")
+    @lightbulb.option("discordid", "Who to follow")
+    @lightbulb.command("follow", "Follow someones status online")
     @lightbulb.implements(commands.SlashCommand)
-    async def echo(ctx):
-        await ctx.respond(ctx.options.text)
+    async def follow(ctx: lightbulb.context.Context):
+        req = SpyRequest(spy=int(ctx.member.id), spyId=None, spyTarget=int(ctx.options.discordid))
+        ctx.app.manager.add_spy(req)
+        requester = await ctx.app.rest.fetch_user(req.spy)
+        target = await ctx.app.rest.fetch_user(req.spyTarget)
+        await ctx.respond(f"{requester.username}#{requester.discriminator} is now following {target.username}#{target.discriminator}")

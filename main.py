@@ -8,12 +8,13 @@ from dotenv import load_dotenv
 
 from clients import EyeSpyClient
 from dal import Dal
+from managers import EyeSpyManager
 
 
 def init_discord_client():
     discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
 
-    client = EyeSpyClient(dal=dal, token=discord_client_token)
+    client = EyeSpyClient(manager=manager, token=discord_client_token)
     client.run()
 
 
@@ -25,6 +26,8 @@ if __name__ == "__main__":
     load_dotenv()
 
     dal = Dal(sqlite3.connect('eyespy.db'))
+    manager = EyeSpyManager(dal)
+
 
     # client = Process(target=init_discord_client)
     # client.start()
