@@ -6,6 +6,7 @@ from lightbulb import commands
 
 import managers
 from models import SpyRequest
+from models import NotifySpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):
@@ -31,36 +32,31 @@ class EyeSpyClient(lightbulb.BotApp):
 
     # Gateway listeners
     async def on_starting(self, event: hikari.StartingEvent):
-        self.logger.info('Starting up', stack_info=True)
+        self.logger.info('Starting up')
 
     async def on_started(self, event: hikari.StartedEvent):
-        self.logger.info('Started', stack_info=True)
+        self.logger.info('Started')
 
     async def on_stopping(self, event: hikari.StoppingEvent):
-        self.logger.info('Stopping', stack_info=True)
+        self.logger.info('Stopping')
 
     async def on_message(self, event: hikari.DMMessageCreateEvent):
-        self.logger.info('Message received: {0}'.format(event.message), stack_info=True)
-        if event.content.lower().startswith("ping"):
-            await event.message.respond("Pong!")
-        if event.content.lower() == "chungus":
-            await event.message.respond("He's a great big boi.")
+        self.logger.info('Message received: {0}'.format(event.message))
 
     async def presence_update(self, event: hikari.PresenceUpdateEvent):
-        return
-        # self.logger.info('Update received. old presence: {0}, new presence: {1}'.format(event.old_presence, event.presence))
-        # user = await self.rest.fetch_user(event.user_id)
-        # channel = await self.rest.create_dm_channel(347853274352844803)
-        # await self.rest.create_message(channel, f'User status change: {user.username}')
-        # self.dal.insert_status(before, after)
+        req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
+        await self.manager.notify_spies(self.rest, req)
+
 
     # Commands
     @lightbulb.option("discordid", "Who to follow")
     @lightbulb.command("follow", "Follow someones status online")
     @lightbulb.implements(commands.SlashCommand)
     async def follow(ctx: lightbulb.context.Context):
-        req = SpyRequest(spy=int(ctx.member.id), spyId=None, spyTarget=int(ctx.options.discordid))
-        ctx.app.manager.add_spy(req)
-        requester = await ctx.app.rest.fetch_user(req.spy)
-        target = await ctx.app.rest.fetch_user(req.spyTarget)
-        await ctx.respond(f"{requester.username}#{requester.discriminator} is now following {target.username}#{target.discriminator}")
+        req = SpyRequest(spy=int(ctx.member.id), spy_id=None, spy_target=int(ctx.options.discordid))
+        if ctx.app.manager.add_spy(req):
+            requester = await ctx.app.rest.fetch_user(req.spy)
+            target = await ctx.app.rest.fetch_user(req.spy_target)
+            await ctx.respond(f"{requester.username}#{requester.discriminator} is now following {target.username}#{target.discriminator}")
+        else:
+            await ctx.respond("Unable to follow user, or you are already following them")
