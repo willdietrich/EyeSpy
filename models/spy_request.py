@@ -3,6 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class SpyRequest:
-    spy: int
     spy_id: int
-    spy_target: int
+    spy_user_id: int
+    spy_target_id: int

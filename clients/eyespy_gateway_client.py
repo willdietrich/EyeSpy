@@ -23,6 +23,8 @@ class EyeSpyClient(lightbulb.BotApp):
 
         # Initialize commands
         self.command(self.follow)
+        self.command(self.unfollow)
+        self.command(self.list)
 
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
@@ -47,16 +49,41 @@ class EyeSpyClient(lightbulb.BotApp):
         req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
         await self.manager.notify_spies(self.rest, req)
 
-
     # Commands
     @lightbulb.option("discordid", "Who to follow")
-    @lightbulb.command("follow", "Follow someones status online")
+    @lightbulb.command("follow", "Follow a users online status")
     @lightbulb.implements(commands.SlashCommand)
     async def follow(ctx: lightbulb.context.Context):
-        req = SpyRequest(spy=int(ctx.member.id), spy_id=None, spy_target=int(ctx.options.discordid))
+        req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
         if ctx.app.manager.add_spy(req):
-            requester = await ctx.app.rest.fetch_user(req.spy)
-            target = await ctx.app.rest.fetch_user(req.spy_target)
-            await ctx.respond(f"{requester.username}#{requester.discriminator} is now following {target.username}#{target.discriminator}")
+            requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+            target = await ctx.app.rest.fetch_user(req.spy_target_id)
+            await ctx.respond(f"{str(requester)} is now following {str(target)}")
         else:
             await ctx.respond("Unable to follow user, or you are already following them")
+
+    @lightbulb.option("discordid", "Who to unfollow")
+    @lightbulb.command("unfollow", "Stop following a user")
+    @lightbulb.implements(commands.SlashCommand)
+    async def unfollow(ctx: lightbulb.context.Context):
+        req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
+        if ctx.app.manager.remove_spy(req):
+            requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+            target = await ctx.app.rest.fetch_user(req.spy_target_id)
+            await ctx.respond(f"{str(requester)} is no longer following {str(target)}")
+        else:
+            await ctx.respond("Unable to un-follow, or you never previously followed that user")
+
+    @lightbulb.command("list", "List what users you are following")
+    @lightbulb.implements(commands.SlashCommand)
+    async def list(ctx: lightbulb.context.Context):
+        spies = ctx.app.manager.list_spy(int(ctx.member.id))
+        if spies == None or len(spies) < 1:
+            await ctx.respond(f"It doesn't appear that you are currently following anyone, try `/follow`")
+
+        result = []
+        for spy in spies:
+            target = await ctx.app.rest.fetch_user(spy)
+            result.append((f"{target.username}#{target.discriminator}", spy))
+
+        await ctx.respond(f"You are following: {result}")
