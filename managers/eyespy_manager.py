@@ -16,7 +16,7 @@ class EyeSpyManager:
 
         spy_id = self.dal.get_spy_id(request)
         if len(spy_id) > 0:
-            request.spy_id = spy_id[0]
+            request.spy_id = spy_id[0][0]
         else:
             request.spy_id = self.dal.insert_spy(request)
         self.dal.insert_target(request)

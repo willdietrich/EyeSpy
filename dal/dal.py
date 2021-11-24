@@ -40,15 +40,8 @@ class Dal:
 
     @dal_retrieve
     def get_spy_id(self, request: SpyRequest):
-        stmt = 'SELECT s.DiscordId as spy FROM DiscordSpys s WHERE s.DiscordId=?'
-        data = (request.spy_id,)
-
-        return stmt, data
-
-    @dal_retrieve
-    def get_spy_id(self, request: SpyRequest):
-        stmt = 'SELECT s.DiscordId as spy FROM DiscordSpys s WHERE s.DiscordId=?'
-        data = (request.spy_id,)
+        stmt = 'SELECT s.DiscordSpyId as spy FROM DiscordSpys s WHERE s.DiscordId=?'
+        data = (request.spy_user_id,)
 
         return stmt, data
 

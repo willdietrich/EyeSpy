@@ -54,25 +54,31 @@ class EyeSpyClient(lightbulb.BotApp):
     @lightbulb.command("follow", "Follow a users online status")
     @lightbulb.implements(commands.SlashCommand)
     async def follow(ctx: lightbulb.context.Context):
-        req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
-        if ctx.app.manager.add_spy(req):
-            requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+        try:
+            req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
             target = await ctx.app.rest.fetch_user(req.spy_target_id)
-            await ctx.respond(f"{str(requester)} is now following {str(target)}")
-        else:
-            await ctx.respond("Unable to follow user, or you are already following them")
+            if ctx.app.manager.add_spy(req):
+                requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+                await ctx.respond(f"{str(requester)} is now following {str(target)}")
+            else:
+                await ctx.respond("Unable to follow user, or you are already following them")
+        except:
+            await ctx.respond("An error occurred while attempting to follow the specified user, make sure the specified ID is correct.")
 
     @lightbulb.option("discordid", "Who to unfollow")
     @lightbulb.command("unfollow", "Stop following a user")
     @lightbulb.implements(commands.SlashCommand)
     async def unfollow(ctx: lightbulb.context.Context):
-        req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
-        if ctx.app.manager.remove_spy(req):
-            requester = await ctx.app.rest.fetch_user(req.spy_user_id)
-            target = await ctx.app.rest.fetch_user(req.spy_target_id)
-            await ctx.respond(f"{str(requester)} is no longer following {str(target)}")
-        else:
-            await ctx.respond("Unable to un-follow, or you never previously followed that user")
+        try:
+            req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
+            if ctx.app.manager.remove_spy(req):
+                requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+                target = await ctx.app.rest.fetch_user(req.spy_target_id)
+                await ctx.respond(f"{str(requester)} is no longer following {str(target)}")
+            else:
+                await ctx.respond("Unable to un-follow, or you never previously followed that user")
+        except:
+            await ctx.respond("An error occurred while attempting to unfollow the specified user, make sure the specified ID is correct.")
 
     @lightbulb.command("list", "List what users you are following")
     @lightbulb.implements(commands.SlashCommand)
@@ -80,6 +86,7 @@ class EyeSpyClient(lightbulb.BotApp):
         spies = ctx.app.manager.list_spy(int(ctx.member.id))
         if spies == None or len(spies) < 1:
             await ctx.respond(f"It doesn't appear that you are currently following anyone, try `/follow`")
+            return
 
         result = []
         for spy in spies:
