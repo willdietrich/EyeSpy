@@ -2,7 +2,7 @@ import asyncio
 import os
 import sqlite3
 
-# from multiprocessing import Process
+from multiprocessing import Process
 import uvicorn
 from dotenv import load_dotenv
 
@@ -19,7 +19,7 @@ def init_discord_client():
 
 
 def init_api():
-    uvicorn.run("api.api:app", host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run("api.api:app", host="0.0.0.0", port=8000, log_level="info")
 
 
 if __name__ == "__main__":
@@ -28,10 +28,8 @@ if __name__ == "__main__":
     dal = Dal(sqlite3.connect('eyespy.db'))
     manager = EyeSpyManager(dal)
 
+    client = Process(target=init_discord_client)
+    client.start()
 
-    # client = Process(target=init_discord_client)
-    # client.start()
-    init_discord_client()
-
-    # api = Process(target=init_api)
-    # api.start()
+    api = Process(target=init_api)
+    api.start()
