@@ -4,12 +4,14 @@ import hikari
 import lightbulb
 from lightbulb import commands
 
-from dal.dal import Dal
+import managers
+from models import SpyRequest
+from models import NotifySpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):
-    def __init__(self, dal: Dal, token: str, *args, **kwargs):
-        self.dal = dal
+    def __init__(self, manager: managers.EyeSpyManager, token: str, *args, **kwargs):
+        self.manager = manager
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
         # Initialize events
@@ -20,7 +22,9 @@ class EyeSpyClient(lightbulb.BotApp):
         self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
 
         # Initialize commands
-        self.command(self.echo)
+        self.command(self.follow)
+        self.command(self.unfollow)
+        self.command(self.list)
 
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
@@ -30,30 +34,63 @@ class EyeSpyClient(lightbulb.BotApp):
 
     # Gateway listeners
     async def on_starting(self, event: hikari.StartingEvent):
-        self.logger.info('Starting up', stack_info=True)
+        self.logger.info('Starting up')
 
     async def on_started(self, event: hikari.StartedEvent):
-        self.logger.info('Started', stack_info=True)
+        self.logger.info('Started')
 
     async def on_stopping(self, event: hikari.StoppingEvent):
-        self.logger.info('Stopping', stack_info=True)
+        self.logger.info('Stopping')
 
     async def on_message(self, event: hikari.DMMessageCreateEvent):
-        self.logger.info('Message received: {0}'.format(event.message), stack_info=True)
-        if event.content.lower().startswith("ping"):
-            await event.message.respond("Pong!")
-        if event.content.lower() == "chungus":
-            await event.message.respond("He's a great big boi.")
+        self.logger.info('Message received: {0}'.format(event.message))
 
     async def presence_update(self, event: hikari.PresenceUpdateEvent):
-        self.logger.info('Update received. old presence: {0}, new presence: {1}'.format(event.old_presence, event.presence))
-        user = await self.rest.fetch_user(event.user_id)
-        self.logger.info('User Info: {0}'.format(user))
-        # self.dal.insert_status(before, after)
+        req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
+        await self.manager.notify_spies(self.rest, req)
 
     # Commands
-    @lightbulb.option("text", "text to repeat")
-    @lightbulb.command("echo", "repeats the given text")
+    @lightbulb.option("discordid", "Who to follow")
+    @lightbulb.command("follow", "Follow a users online status")
     @lightbulb.implements(commands.SlashCommand)
-    async def echo(ctx):
-        await ctx.respond(ctx.options.text)
+    async def follow(ctx: lightbulb.context.Context):
+        try:
+            req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
+            target = await ctx.app.rest.fetch_user(req.spy_target_id)
+            if ctx.app.manager.add_spy(req):
+                requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+                await ctx.respond(f"{str(requester)} is now following {str(target)}")
+            else:
+                await ctx.respond("Unable to follow user, or you are already following them")
+        except:
+            await ctx.respond("An error occurred while attempting to follow the specified user, make sure the specified ID is correct.")
+
+    @lightbulb.option("discordid", "Who to unfollow")
+    @lightbulb.command("unfollow", "Stop following a user")
+    @lightbulb.implements(commands.SlashCommand)
+    async def unfollow(ctx: lightbulb.context.Context):
+        try:
+            req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
+            if ctx.app.manager.remove_spy(req):
+                requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+                target = await ctx.app.rest.fetch_user(req.spy_target_id)
+                await ctx.respond(f"{str(requester)} is no longer following {str(target)}")
+            else:
+                await ctx.respond("Unable to un-follow, or you never previously followed that user")
+        except:
+            await ctx.respond("An error occurred while attempting to unfollow the specified user, make sure the specified ID is correct.")
+
+    @lightbulb.command("list", "List what users you are following")
+    @lightbulb.implements(commands.SlashCommand)
+    async def list(ctx: lightbulb.context.Context):
+        spies = ctx.app.manager.list_spy(int(ctx.member.id))
+        if spies == None or len(spies) < 1:
+            await ctx.respond(f"It doesn't appear that you are currently following anyone, try `/follow`")
+            return
+
+        result = []
+        for spy in spies:
+            target = await ctx.app.rest.fetch_user(spy)
+            result.append((f"{target.username}#{target.discriminator}", spy))
+
+        await ctx.respond(f"You are following: {result}")

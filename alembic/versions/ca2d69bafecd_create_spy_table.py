@@ -22,8 +22,8 @@ def upgrade():
         sa.Column('DiscordSpyId',
                   sa.INTEGER,
                   primary_key=True),
-        sa.Column('DiscordName',
-                  sa.TEXT,
+        sa.Column('DiscordId',
+                  sa.INTEGER,
                   nullable=False)
     )
 
@@ -36,22 +36,9 @@ def upgrade():
                   sa.INTEGER,
                   sa.ForeignKey('DiscordSpys.DiscordSpyId', name='fk_discordspytargets_discordspyid_discordspys'),
                   nullable=False),
-        sa.Column('DiscordName',
-                  sa.TEXT,
+        sa.Column('DiscordId',
+                  sa.INTEGER,
                   nullable=False)
-    )
-
-    op.create_table(
-        'discord_status',
-        sa.Column('username',
-                  sa.TEXT,
-                  nullable=False),
-        sa.Column('status',
-                  sa.TEXT),
-        sa.Column('activity',
-                  sa.TEXT),
-        sa.Column('timestamp',
-                  sa.INTEGER)
     )
 
 
