@@ -31,5 +31,5 @@ if __name__ == "__main__":
     client = Process(target=init_discord_client)
     client.start()
 
-    api = Process(target=init_api)
-    api.start()
+    # api = Process(target=init_api)
+    # api.start()
