@@ -15,7 +15,7 @@ from managers import MusicManager
 def init_discord_client():
     discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
 
-    client = EyeSpyClient(manager=manager, music_manager=music_manager,token=discord_client_token)
+    client = EyeSpyClient(manager=manager, music_manager=music_manager, token=discord_client_token)
     client.run()
 
 
