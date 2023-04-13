@@ -27,6 +27,7 @@ class EventHandler:
         if skip and not node.queue and not node.now_playing:
             await lavalink.stop(event.guild_id)
 
+
 class MusicManager:
 
     def __init__(self):
@@ -94,4 +95,38 @@ class MusicManager:
 
         await ctx.respond("Left voice channel")
 
-    # async def play_song(self, ctx: lightbulb.Context) -> str:
+    async def play_song(self, ctx: lightbulb.Context):
+        """Searches the query on youtube, or adds the URL to the queue."""
+        query = ctx.options.url
+
+        if not query:
+            await ctx.respond("Please specify a query.")
+            return None
+
+        con = self.lavalink.get_guild_gateway_connection_info(ctx.guild_id)
+        # Join the user's voice channel if the bot is not in one.
+        if not con:
+            await self.join_voice_channel(ctx)
+
+        # Search the query, auto_search will get the track from a url if possible, otherwise,
+        # it will search the query on youtube.
+        query_information = await self.lavalink.auto_search_tracks(query)
+
+        if not query_information.tracks:  # tracks is empty
+            await ctx.respond("Could not find any video of the search query.")
+            return
+
+        try:
+            # `.requester()` To set who requested the track, so you can show it on now-playing or queue.
+            # `.queue()` To add the track to the queue rather than starting to play the track now.
+            await self.lavalink.play(ctx.guild_id, query_information.tracks[0]).requester(ctx.author.id).queue()
+        except lavasnek_rs.NoSessionPresent:
+            await ctx.respond(f"Use `join` first")
+            return
+
+        await ctx.respond(f"Added to queue: {query_information.tracks[0].info.title}")
+
+    async def stop_song(self, ctx: lightbulb.Context):
+        """Stops the current song (skip to continue)."""
+        await self.lavalink.stop(ctx.guild_id)
+        await ctx.respond("Stopped playing")

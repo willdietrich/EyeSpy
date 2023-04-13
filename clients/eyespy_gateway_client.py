@@ -21,6 +21,7 @@ class EyeSpyClient(lightbulb.BotApp):
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
         # Initialize events
+        # region Events
         self.event_manager.subscribe(hikari.StartingEvent, self.on_starting)
         self.event_manager.subscribe(hikari.StartedEvent, self.on_started)
         self.event_manager.subscribe(hikari.StoppingEvent, self.on_stopping)
@@ -29,23 +30,29 @@ class EyeSpyClient(lightbulb.BotApp):
         self.event_manager.subscribe(hikari.ShardReadyEvent, self.shard_ready)
         self.event_manager.subscribe(hikari.VoiceStateUpdateEvent, self.voice_state_update)
         self.event_manager.subscribe(hikari.VoiceServerUpdateEvent, self.voice_server_update)
+        # endregion
 
         # Initialize commands
+        # region Commands
         self.command(self.follow)
         self.command(self.unfollow)
         self.command(self.list)
         self.command(self.join_voice)
         self.command(self.leave_voice)
-        # self.command(self.play_song)
-        # self.command(self.stop_song)
+        self.command(self.play_song)
+        self.command(self.stop_song)
+        # endregion
 
+        # region Logging setup
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
         handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
         handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
         self.logger.addHandler(handler)
+        # endregion
 
     # Gateway listeners
+    # region Listeners
     async def on_starting(self, event: hikari.StartingEvent):
         self.logger.info('Starting up')
 
@@ -75,8 +82,10 @@ class EyeSpyClient(lightbulb.BotApp):
 
     async def voice_server_update(self, event: hikari.VoiceServerUpdateEvent) -> None:
         await self.music_manager.lavalink.raw_handle_event_voice_server_update(event.guild_id, event.endpoint, event.token)
+    # endregion
 
     # Commands
+    # region EyeSpy commands
     @lightbulb.option("discordid", "Who to follow")
     @lightbulb.command("follow", "Follow a users online status")
     @lightbulb.implements(commands.SlashCommand)
@@ -121,7 +130,9 @@ class EyeSpyClient(lightbulb.BotApp):
             result.append((f"{target.username}#{target.discriminator}", spy))
 
         await ctx.respond(f"You are following: {result}")
+    # endregion
 
+    # region Music player commands
     @lightbulb.command("join", "Join your current voice channel")
     @lightbulb.implements(commands.SlashCommand)
     async def join_voice(ctx: lightbulb.Context) -> None:
@@ -132,11 +143,14 @@ class EyeSpyClient(lightbulb.BotApp):
     async def leave_voice(ctx: lightbulb.Context) -> None:
         await ctx.app.music_manager.leave_channel(ctx)
 
-    # @lightbulb.option("url", "Track URL")
-    # @lightbulb.command("play", "Play a song")
-    # @lightbulb.implements(commands.SlashCommand)
-    # async def play_song(ctx: lightbulb.Context) -> None:
-    #
-    # @lightbulb.command("stop", "Stop playing a song")
-    # @lightbulb.implements(commands.SlashCommand)
-    # async def stop_song(ctx: lightbulb.Context) -> None:
+    @lightbulb.option("url", "Track URL")
+    @lightbulb.command("play", "Play a song")
+    @lightbulb.implements(commands.SlashCommand)
+    async def play_song(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.play_song(ctx)
+
+    @lightbulb.command("stop", "Stop playing a song")
+    @lightbulb.implements(commands.SlashCommand)
+    async def stop_song(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.stop_song(ctx)
+    # endregion
