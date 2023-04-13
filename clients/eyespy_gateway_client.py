@@ -10,8 +10,14 @@ from models import NotifySpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):
-    def __init__(self, manager: managers.EyeSpyManager, token: str, *args, **kwargs):
+    manager: managers.EyeSpyManager
+    music_manager: managers.MusicManager
+    token: str
+
+    def __init__(self, manager: managers.EyeSpyManager, music_manager: managers.MusicManager, token: str, *args, **kwargs):
         self.manager = manager
+        self.music_manager = music_manager
+        self.token = token
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
         # Initialize events
@@ -20,11 +26,18 @@ class EyeSpyClient(lightbulb.BotApp):
         self.event_manager.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.event_manager.subscribe(hikari.DMMessageCreateEvent, self.on_message)
         self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
+        self.event_manager.subscribe(hikari.ShardReadyEvent, self.shard_ready)
+        self.event_manager.subscribe(hikari.VoiceStateUpdateEvent, self.voice_state_update)
+        self.event_manager.subscribe(hikari.VoiceServerUpdateEvent, self.voice_server_update)
 
         # Initialize commands
         self.command(self.follow)
         self.command(self.unfollow)
         self.command(self.list)
+        self.command(self.join_voice)
+        self.command(self.leave_voice)
+        # self.command(self.play_song)
+        # self.command(self.stop_song)
 
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
@@ -49,11 +62,25 @@ class EyeSpyClient(lightbulb.BotApp):
         req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
         await self.manager.notify_spies(self.rest, req)
 
+    async def shard_ready(self, event: hikari.ShardReadyEvent):
+        await self.music_manager.start_lavalink(event, self.token)
+
+    async def voice_state_update(self, event: hikari.VoiceStateUpdateEvent) -> None:
+        self.music_manager.lavalink.raw_handle_event_voice_state_update(
+            event.state.guild_id,
+            event.state.user_id,
+            event.state.session_id,
+            event.state.channel_id,
+        )
+
+    async def voice_server_update(self, event: hikari.VoiceServerUpdateEvent) -> None:
+        await self.music_manager.lavalink.raw_handle_event_voice_server_update(event.guild_id, event.endpoint, event.token)
+
     # Commands
     @lightbulb.option("discordid", "Who to follow")
     @lightbulb.command("follow", "Follow a users online status")
     @lightbulb.implements(commands.SlashCommand)
-    async def follow(ctx: lightbulb.context.Context):
+    async def follow(ctx: lightbulb.Context) -> None:
         try:
             req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
             target = await ctx.app.rest.fetch_user(req.spy_target_id)
@@ -68,7 +95,7 @@ class EyeSpyClient(lightbulb.BotApp):
     @lightbulb.option("discordid", "Who to unfollow")
     @lightbulb.command("unfollow", "Stop following a user")
     @lightbulb.implements(commands.SlashCommand)
-    async def unfollow(ctx: lightbulb.context.Context):
+    async def unfollow(ctx: lightbulb.Context) -> None:
         try:
             req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
             if ctx.app.manager.remove_spy(req):
@@ -82,7 +109,7 @@ class EyeSpyClient(lightbulb.BotApp):
 
     @lightbulb.command("list", "List what users you are following")
     @lightbulb.implements(commands.SlashCommand)
-    async def list(ctx: lightbulb.context.Context):
+    async def list(ctx: lightbulb.Context) -> None:
         spies = ctx.app.manager.list_spy(int(ctx.member.id))
         if spies == None or len(spies) < 1:
             await ctx.respond(f"It doesn't appear that you are currently following anyone, try `/follow`")
@@ -94,3 +121,22 @@ class EyeSpyClient(lightbulb.BotApp):
             result.append((f"{target.username}#{target.discriminator}", spy))
 
         await ctx.respond(f"You are following: {result}")
+
+    @lightbulb.command("join", "Join your current voice channel")
+    @lightbulb.implements(commands.SlashCommand)
+    async def join_voice(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.join_channel(ctx)
+
+    @lightbulb.command("disconnect", "Disconnect from current voice channel")
+    @lightbulb.implements(commands.SlashCommand)
+    async def leave_voice(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.leave_channel(ctx)
+
+    # @lightbulb.option("url", "Track URL")
+    # @lightbulb.command("play", "Play a song")
+    # @lightbulb.implements(commands.SlashCommand)
+    # async def play_song(ctx: lightbulb.Context) -> None:
+    #
+    # @lightbulb.command("stop", "Stop playing a song")
+    # @lightbulb.implements(commands.SlashCommand)
+    # async def stop_song(ctx: lightbulb.Context) -> None:
