@@ -41,6 +41,10 @@ class EyeSpyClient(lightbulb.BotApp):
         self.command(self.leave_voice)
         self.command(self.play_song)
         self.command(self.stop_song)
+        self.command(self.skip_song)
+        self.command(self.pause_song)
+        self.command(self.resume_song)
+
         # endregion
 
         # region Logging setup
@@ -153,4 +157,19 @@ class EyeSpyClient(lightbulb.BotApp):
     @lightbulb.implements(commands.SlashCommand)
     async def stop_song(ctx: lightbulb.Context) -> None:
         await ctx.app.music_manager.stop_song(ctx)
+
+    @lightbulb.command("skip", "Skips the current song.")
+    @lightbulb.implements(lightbulb.SlashCommand)
+    async def skip_song(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.skip(ctx)
+
+    @lightbulb.command("pause", "Pause the current song.")
+    @lightbulb.implements(lightbulb.SlashCommand)
+    async def pause_song(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.pause(ctx)
+
+    @lightbulb.command("resume", "Resume the current song.")
+    @lightbulb.implements(lightbulb.SlashCommand)
+    async def resume_song(ctx: lightbulb.Context) -> None:
+        await ctx.app.music_manager.resume(ctx)
     # endregion

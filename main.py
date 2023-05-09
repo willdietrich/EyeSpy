@@ -11,6 +11,9 @@ from dal import Dal
 from managers import EyeSpyManager
 from managers import MusicManager
 
+from alembic.config import Config
+from alembic import command
+
 
 def init_discord_client():
     discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
@@ -25,6 +28,10 @@ def init_api():
 
 if __name__ == "__main__":
     load_dotenv()
+
+    # Migrate DB settings
+    alembic_cfg = Config("./alembic.ini")
+    command.upgrade(alembic_cfg, "head")
 
     dal = Dal(sqlite3.connect('eyespy.db'))
     manager = EyeSpyManager(dal)

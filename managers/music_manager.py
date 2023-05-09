@@ -130,3 +130,31 @@ class MusicManager:
         """Stops the current song (skip to continue)."""
         await self.lavalink.stop(ctx.guild_id)
         await ctx.respond("Stopped playing")
+
+    async def skip(self, ctx: lightbulb.Context):
+        """Skips the current song."""
+
+        skip = await self.lavalink.skip(ctx.guild_id)
+        node = await self.lavalink.get_guild_node(ctx.guild_id)
+
+        if not skip:
+            await ctx.respond("Nothing to skip")
+        else:
+            # If the queue is empty, the next track won't start playing (because there isn't any),
+            # so we stop the player.
+            if not node.queue and not node.now_playing:
+                await self.lavalink.stop(ctx.guild_id)
+
+            await ctx.respond(f"Skipped: {skip.track.info.title}")
+
+    async def pause(self, ctx: lightbulb.Context):
+        """Pauses the current song."""
+
+        await self.lavalink.pause(ctx.guild_id)
+        await ctx.respond("Paused player")
+
+    async def resume(self, ctx:lightbulb.Context):
+        """Resumes playing the current song."""
+
+        await self.lavalink.resume(ctx.guild_id)
+        await ctx.respond("Resumed player")
