@@ -9,7 +9,7 @@ RUN pip3 install -r requirements.txt
 
 RUN apt-get update -y  \
     && apt install -y sqlite3 \
-    && /usr/bin/sqlite3 /app/eyespy.db
+    && /usr/bin/sqlite3 /app/db/eyespy.db
 
 COPY . .
 

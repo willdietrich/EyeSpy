@@ -30,10 +30,10 @@ if __name__ == "__main__":
     load_dotenv()
 
     # Migrate DB settings
-    alembic_cfg = Config("./alembic.ini")
-    command.upgrade(alembic_cfg, "head")
+    #alembic_cfg = Config("./alembic.ini")
+    #command.upgrade(alembic_cfg, "head")
 
-    dal = Dal(sqlite3.connect('eyespy.db'))
+    dal = Dal(sqlite3.connect('./db/eyespy.db'))
     manager = EyeSpyManager(dal)
     music_manager = MusicManager()
 
