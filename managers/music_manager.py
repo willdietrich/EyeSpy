@@ -41,7 +41,7 @@ class MusicManager:
             # TOKEN can be an empty string if you don't want to use lavasnek's discord gateway.
             lavasnek_rs.LavalinkBuilder(event.my_user.id, token)
                 # This is the default value, so this is redundant, but it's here to show how to set a custom one.
-                .set_host("127.0.0.1").set_password("youshallnotpass")
+                .set_host("lavalink").set_password("youshallnotpass")
         )
 
         builder.set_start_gateway(False)
@@ -97,7 +97,7 @@ class MusicManager:
 
     async def play_song(self, ctx: lightbulb.Context):
         """Searches the query on youtube, or adds the URL to the queue."""
-        query = ctx.options.url
+        query = ctx.options.query
 
         if not query:
             await ctx.respond("Please specify a query.")

@@ -147,7 +147,7 @@ class EyeSpyClient(lightbulb.BotApp):
     async def leave_voice(ctx: lightbulb.Context) -> None:
         await ctx.app.music_manager.leave_channel(ctx)
 
-    @lightbulb.option("url", "Track URL")
+    @lightbulb.option("query", "What do you want to listen to")
     @lightbulb.command("play", "Play a song")
     @lightbulb.implements(commands.SlashCommand)
     async def play_song(ctx: lightbulb.Context) -> None:
