@@ -11,12 +11,10 @@ from models import NotifySpyRequest
 
 class EyeSpyClient(lightbulb.BotApp):
     manager: managers.EyeSpyManager
-    music_manager: managers.MusicManager
     token: str
 
-    def __init__(self, manager: managers.EyeSpyManager, music_manager: managers.MusicManager, token: str, *args, **kwargs):
+    def __init__(self, manager: managers.EyeSpyManager, token: str, *args, **kwargs):
         self.manager = manager
-        self.music_manager = music_manager
         self.token = token
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
@@ -27,9 +25,6 @@ class EyeSpyClient(lightbulb.BotApp):
         self.event_manager.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.event_manager.subscribe(hikari.DMMessageCreateEvent, self.on_message)
         self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
-        self.event_manager.subscribe(hikari.ShardReadyEvent, self.shard_ready)
-        self.event_manager.subscribe(hikari.VoiceStateUpdateEvent, self.voice_state_update)
-        self.event_manager.subscribe(hikari.VoiceServerUpdateEvent, self.voice_server_update)
         # endregion
 
         # Initialize commands
@@ -37,13 +32,6 @@ class EyeSpyClient(lightbulb.BotApp):
         self.command(self.follow)
         self.command(self.unfollow)
         self.command(self.list)
-        self.command(self.join_voice)
-        self.command(self.leave_voice)
-        self.command(self.play_song)
-        self.command(self.stop_song)
-        self.command(self.skip_song)
-        self.command(self.pause_song)
-        self.command(self.resume_song)
 
         # endregion
 
@@ -72,20 +60,6 @@ class EyeSpyClient(lightbulb.BotApp):
     async def presence_update(self, event: hikari.PresenceUpdateEvent):
         req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
         await self.manager.notify_spies(self.rest, req)
-
-    async def shard_ready(self, event: hikari.ShardReadyEvent):
-        await self.music_manager.start_lavalink(event, self.token)
-
-    async def voice_state_update(self, event: hikari.VoiceStateUpdateEvent) -> None:
-        self.music_manager.lavalink.raw_handle_event_voice_state_update(
-            event.state.guild_id,
-            event.state.user_id,
-            event.state.session_id,
-            event.state.channel_id,
-        )
-
-    async def voice_server_update(self, event: hikari.VoiceServerUpdateEvent) -> None:
-        await self.music_manager.lavalink.raw_handle_event_voice_server_update(event.guild_id, event.endpoint, event.token)
     # endregion
 
     # Commands
@@ -134,42 +108,4 @@ class EyeSpyClient(lightbulb.BotApp):
             result.append((f"{target.username}#{target.discriminator}", spy))
 
         await ctx.respond(f"You are following: {result}")
-    # endregion
-
-    # region Music player commands
-    @lightbulb.command("join", "Join your current voice channel")
-    @lightbulb.implements(commands.SlashCommand)
-    async def join_voice(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.join_channel(ctx)
-
-    @lightbulb.command("disconnect", "Disconnect from current voice channel")
-    @lightbulb.implements(commands.SlashCommand)
-    async def leave_voice(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.leave_channel(ctx)
-
-    @lightbulb.option("query", "What do you want to listen to")
-    @lightbulb.command("play", "Play a song")
-    @lightbulb.implements(commands.SlashCommand)
-    async def play_song(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.play_song(ctx)
-
-    @lightbulb.command("stop", "Stop playing a song")
-    @lightbulb.implements(commands.SlashCommand)
-    async def stop_song(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.stop_song(ctx)
-
-    @lightbulb.command("skip", "Skips the current song.")
-    @lightbulb.implements(lightbulb.SlashCommand)
-    async def skip_song(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.skip(ctx)
-
-    @lightbulb.command("pause", "Pause the current song.")
-    @lightbulb.implements(lightbulb.SlashCommand)
-    async def pause_song(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.pause(ctx)
-
-    @lightbulb.command("resume", "Resume the current song.")
-    @lightbulb.implements(lightbulb.SlashCommand)
-    async def resume_song(ctx: lightbulb.Context) -> None:
-        await ctx.app.music_manager.resume(ctx)
     # endregion
