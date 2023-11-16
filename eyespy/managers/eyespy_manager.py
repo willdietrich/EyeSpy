@@ -1,8 +1,8 @@
 import hikari
 from hikari.presences import Status
 
-from dal import Dal
-import models
+from eyespy.dal import Dal
+import eyespy.models as models
 
 
 class EyeSpyManager:
