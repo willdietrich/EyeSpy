@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Will Dietrich"]
 readme = "README.md"
+packages = [{include = "eyespy"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.12"
@@ -14,6 +15,7 @@ hikari-lightbulb = "^2.3.2"
 python-dotenv = "^1.0.0"
 SQLAlchemy = "^2.0.7"
 uvicorn = "^0.21.1"
+[tool.poetry.group.dev.dependencies]
 
 [build-system]
 requires = ["poetry-core"]

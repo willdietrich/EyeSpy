@@ -1,17 +1,17 @@
-import asyncio
+# import asyncio
 import os
 import sqlite3
 
-from multiprocessing import Process
+# from multiprocessing import Process
 import uvicorn
 from dotenv import load_dotenv
 
-from clients import EyeSpyClient
-from dal import Dal
-from managers import EyeSpyManager
+from .clients import EyeSpyClient
+from .dal import Dal
+from .managers import EyeSpyManager
 
-from alembic.config import Config
-from alembic import command
+# from alembic.config import Config
+# from alembic import command
 
 
 def init_discord_client():

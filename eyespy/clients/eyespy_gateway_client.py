@@ -4,16 +4,15 @@ import hikari
 import lightbulb
 from lightbulb import commands
 
-import managers
-from models import SpyRequest
-from models import NotifySpyRequest
+from ..managers import EyeSpyManager
+from ..models import SpyRequest, NotifySpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):
-    manager: managers.EyeSpyManager
+    manager: EyeSpyManager
     token: str
 
-    def __init__(self, manager: managers.EyeSpyManager, token: str, *args, **kwargs):
+    def __init__(self, manager: EyeSpyManager, token: str, *args, **kwargs):
         self.manager = manager
         self.token = token
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
@@ -38,7 +37,7 @@ class EyeSpyClient(lightbulb.BotApp):
         # region Logging setup
         self.logger = logging.getLogger('hikari.bot')
         self.logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(filename='./discord.log', encoding='utf-8', mode='w')
+        handler = logging.FileHandler(filename='../discord.log', encoding='utf-8', mode='w')
         handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
         self.logger.addHandler(handler)
         # endregion
