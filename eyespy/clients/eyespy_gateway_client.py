@@ -4,16 +4,18 @@ import hikari
 import lightbulb
 from lightbulb import commands
 
-from ..managers import EyeSpyManager
-from ..models import SpyRequest, NotifySpyRequest
+from managers import EyeSpyAuditManager, EyeSpyManager
+from models import SpyRequest, NotifySpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):
     manager: EyeSpyManager
+    audit_manager: EyeSpyAuditManager
     token: str
 
-    def __init__(self, manager: EyeSpyManager, token: str, *args, **kwargs):
+    def __init__(self, manager: EyeSpyManager, audit_manager: EyeSpyAuditManager, token: str, *args, **kwargs):
         self.manager = manager
+        self.audit_manager = audit_manager
         self.token = token
         super().__init__(intents=hikari.Intents.ALL, token=token, default_enabled_guilds=195357021300719616)
 
@@ -24,6 +26,7 @@ class EyeSpyClient(lightbulb.BotApp):
         self.event_manager.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.event_manager.subscribe(hikari.DMMessageCreateEvent, self.on_message)
         self.event_manager.subscribe(hikari.PresenceUpdateEvent, self.presence_update)
+        self.event_manager.subscribe(hikari.VoiceStateUpdateEvent, self.audit_channel_event)
         # endregion
 
         # Initialize commands
@@ -52,6 +55,7 @@ class EyeSpyClient(lightbulb.BotApp):
 
     async def on_stopping(self, event: hikari.StoppingEvent):
         self.logger.info('Stopping')
+        self.audit_manager.shutdown()
 
     async def on_message(self, event: hikari.DMMessageCreateEvent):
         self.logger.info('Message received: {0}'.format(event.message))
@@ -59,6 +63,9 @@ class EyeSpyClient(lightbulb.BotApp):
     async def presence_update(self, event: hikari.PresenceUpdateEvent):
         req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
         await self.manager.notify_spies(self.rest, req)
+
+    async def audit_channel_event(self, event: hikari.VoiceStateUpdateEvent):
+        self.logger.info('Message received: {0}'.format(event))
     # endregion
 
     # Commands

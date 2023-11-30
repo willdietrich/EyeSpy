@@ -1,23 +1,23 @@
 # import asyncio
-import os
 import sqlite3
 
-# from multiprocessing import Process
 import uvicorn
-from dotenv import load_dotenv
+from dotenv import dotenv_values
+from pymongo import MongoClient
 
-from .clients import EyeSpyClient
-from .dal import Dal
-from .managers import EyeSpyManager
+from clients import EyeSpyClient
+from dal import Dal, AuditDal
+from managers import EyeSpyAuditManager, EyeSpyManager
 
+
+# from multiprocessing import Process
 # from alembic.config import Config
 # from alembic import command
 
-
 def init_discord_client():
-    discord_client_token = os.environ.get('DISCORD_CLIENT_TOKEN')
+    discord_client_token = config['DISCORD_CLIENT_TOKEN']
 
-    client = EyeSpyClient(manager=manager, token=discord_client_token)
+    client = EyeSpyClient(manager=manager, audit_manager=audit_manager, token=discord_client_token)
     client.run()
 
 
@@ -26,19 +26,27 @@ def init_api():
 
 
 if __name__ == "__main__":
-    load_dotenv()
-
     # Migrate DB settings
-    #alembic_cfg = Config("./alembic.ini")
-    #command.upgrade(alembic_cfg, "head")
+    # alembic_cfg = Config("./alembic.ini")
+    # command.upgrade(alembic_cfg, "head")
 
-    dal = Dal(sqlite3.connect('./db/eyespy.db'))
+    config = dotenv_values('../.env')
+
+    # Initialize the spy manager and DAL
+    dal = Dal(sqlite3.connect('../db/eyespy.db'))
     manager = EyeSpyManager(dal)
+
+    # Initialize the audit manager and DAL
+    mongodb_client = MongoClient(config['MONGODB_URI'])
+    mongodb_db = mongodb_client[config['MONGODB_DB']]
+    mongodb_audit_collection = mongodb_db[config['MONGODB_AUDIT_COLLECTION']]
+    audit_dal = AuditDal(mongodb_client, mongodb_db, mongodb_audit_collection)
+    audit_manager = EyeSpyAuditManager(audit_dal)
 
     # client = Process(target=init_discord_client)
     # client.start()
-
     init_discord_client()
 
     # api = Process(target=init_api)
     # api.start()
+    # init_api()
