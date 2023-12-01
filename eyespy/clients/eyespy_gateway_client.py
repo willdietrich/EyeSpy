@@ -65,7 +65,7 @@ class EyeSpyClient(lightbulb.BotApp):
         await self.manager.notify_spies(self.rest, req)
 
     async def audit_channel_event(self, event: hikari.VoiceStateUpdateEvent):
-        self.logger.info('Message received: {0}'.format(event))
+        await self.audit_manager.persist_voice_audit(self.rest, event)
     # endregion
 
     # Commands
