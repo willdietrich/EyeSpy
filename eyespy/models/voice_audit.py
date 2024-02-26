@@ -3,6 +3,7 @@ from typing import TypedDict
 
 
 class VoiceAudit(TypedDict, total=False):
+    _id: str
     channel: str
     channel_id: int
     user: str
