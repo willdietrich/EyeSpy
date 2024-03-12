@@ -37,4 +37,6 @@ COPY alembic ./alembic
 COPY alembic.ini .env ./
 RUN alembic upgrade head
 
-ENTRYPOINT ["python", "-m", "eyespy.main"]
+WORKDIR eyespy
+
+ENTRYPOINT ["python", "-m", "main"]
