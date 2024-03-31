@@ -8,10 +8,11 @@ from pymongo import MongoClient
 
 from clients import EyeSpyClient
 from dal import Dal, AuditDal
+from dal.mongo_connection import get_mongo_connection
 from managers import EyeSpyAuditManager, EyeSpyManager
 
 
-# from multiprocessing import Process
+from multiprocessing import Process
 # from alembic.config import Config
 # from alembic import command
 
@@ -23,7 +24,7 @@ def init_discord_client():
 
 
 def init_api():
-    uvicorn.run("api.api:app", host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run("api.api:app", host="127.0.0.1", port=8000, log_level="info")
 
 
 if __name__ == "__main__":
@@ -38,16 +39,14 @@ if __name__ == "__main__":
     manager = EyeSpyManager(dal)
 
     # Initialize the audit manager and DAL
-    mongodb_client = MongoClient(os.getenv('MONGODB_URI'))
-    mongodb_db = mongodb_client[os.getenv('MONGODB_DB')]
-    mongodb_audit_collection = mongodb_db[os.getenv('MONGODB_AUDIT_COLLECTION')]
-    audit_dal = AuditDal(mongodb_client, mongodb_db, mongodb_audit_collection)
+    connection = get_mongo_connection()
+    audit_dal = AuditDal(**connection)
     audit_manager = EyeSpyAuditManager(audit_dal)
 
     # client = Process(target=init_discord_client)
     # client.start()
-    init_discord_client()
+    # init_discord_client()
 
     # api = Process(target=init_api)
     # api.start()
-    # init_api()
+    init_api()
