@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import users
+from api.routers import user
+from api.routers import audit
+from dal import AuditDal
 
 app = FastAPI()
 

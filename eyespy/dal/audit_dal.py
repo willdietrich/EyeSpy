@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+
+from bson import Int64
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -29,3 +32,14 @@ class AuditDal:
                 "leave_time": audit_json["leave_time"]
             }
         })
+
+    def search_audit_channels(self, target: str | None, timeframe_days: datetime | None):
+        query = {}
+        if target is not None:
+            query['channel_id'] = float(target)
+
+        if timeframe_days is not None:
+            query['leave_time'] = {"$gte": timeframe_days}
+
+        cursor = self.collection.find(query)
+        return cursor
