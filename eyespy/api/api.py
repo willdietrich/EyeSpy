@@ -3,15 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import user
 from api.routers import audit
-from dal import AuditDal
 
 app = FastAPI()
 
 origins = [
     "http://localhost",
     "https://localhost",
-    "http://localhost:5173"
-    "https://localhost:5174"
+    "http://localhost:5173",
+    "http://localhost:5173/"
 ]
 
 app.add_middleware(
