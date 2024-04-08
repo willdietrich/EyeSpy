@@ -7,8 +7,6 @@ from dal import AuditDal
 
 app = FastAPI()
 
-app.include_router(users.router)
-
 origins = [
     "http://localhost",
     "https://localhost",
