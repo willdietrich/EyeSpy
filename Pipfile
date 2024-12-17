@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+alembic = "*"
+fastapi = "*"
+hikari = "*"
+hikari-lightbulb = "*"
+python-dotenv = "*"
+sqlalchemy = "*"
+uvicorn = "*"
+pymongo = "*"
+starlette = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11.11"

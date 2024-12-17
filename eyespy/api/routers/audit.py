@@ -1,14 +1,12 @@
-import base64
 from datetime import datetime, timedelta
 
-import bson
 from fastapi import APIRouter
 
-from api.models.audit_search_repository import AuditSearchResponse
-from api.models.audit_search_request import AuditSearchRequest
-from dal import AuditDal
-from dal.mongo_connection import get_mongo_connection
-from enumerations.audit_type import AuditType
+from eyespy.api.models.audit_search_repository import AuditSearchResponse
+from eyespy.api.models.audit_search_request import AuditSearchRequest
+from eyespy.dal.mongo_connection import get_mongo_connection
+from eyespy.enumerations.audit_type import AuditType
+from eyespy.dal.audit_dal import AuditDal
 
 connection = get_mongo_connection()
 audit_dal = AuditDal(**connection)

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import user
-from api.routers import audit
+from eyespy.api.routers import audit
+from eyespy.api.routers import user
 
 app = FastAPI()
 

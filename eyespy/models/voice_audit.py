@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 
 class VoiceAudit(TypedDict, total=False):

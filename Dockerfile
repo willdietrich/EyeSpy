@@ -1,23 +1,23 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.10-buster as builder
+FROM python:3.11.11-slim-bullseye as builder
 
-RUN pip install poetry==1.7.0
+# Install pipenv
+RUN pip install pipenv
 
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+# Set environment variables for pipenv
+ENV PIPENV_VENV_IN_PROJECT=1
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
-RUN touch README.md
+# Copy Pipfile and Pipfile.lock for dependency installation
+COPY Pipfile Pipfile.lock ./
 
-RUN poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
+# Install dependencies
+RUN pipenv install --deploy --ignore-pipfile
 
 # The runtime image, used to just run the code provided its virtual environment
-FROM python:3.10-slim-buster as runtime
+FROM python:3.11.11-slim-bullseye as runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
@@ -28,15 +28,17 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY eyespy ./eyespy
 
-RUN apt-get update -y  \
-    && apt install -y sqlite3 \
+# Install system dependencies (sqlite3)
+RUN apt-get update -y \
+    && apt-get install -y sqlite3 \
     && mkdir /app/db \
     && /usr/bin/sqlite3 /app/db/eyespy.db
 
+# Copy migration files and environment configuration
 COPY alembic ./alembic
-COPY alembic.ini .env ./
+COPY alembic.ini .env main.py ./
+
+# Run database migrations
 RUN alembic upgrade head
 
-WORKDIR eyespy
-
-ENTRYPOINT ["python", "-m", "main"]
+ENTRYPOINT ["python", "main.py"]

@@ -1,18 +1,18 @@
-# import asyncio
 import os
 import sqlite3
+from multiprocessing import Process
 
 import uvicorn
 from dotenv import load_dotenv
-from pymongo import MongoClient
 
-from clients import EyeSpyClient
-from dal import Dal, AuditDal
-from dal.mongo_connection import get_mongo_connection
-from managers import EyeSpyAuditManager, EyeSpyManager
+from eyespy.clients.eyespy_gateway_client import EyeSpyClient
+from eyespy.dal.audit_dal import AuditDal
+from eyespy.dal.dal import Dal
+from eyespy.dal.mongo_connection import get_mongo_connection
+from eyespy.managers.eyespy_audit_manager import EyeSpyAuditManager
+from eyespy.managers.eyespy_manager import EyeSpyManager
 
 
-from multiprocessing import Process
 # from alembic.config import Config
 # from alembic import command
 
@@ -24,7 +24,7 @@ def init_discord_client():
 
 
 def init_api():
-    uvicorn.run("api.api:app", host="localhost", port=8000, log_level="info")
+    uvicorn.run("eyespy.api.api:app", host="localhost", port=8000, log_level="info")
 
 
 if __name__ == "__main__":
@@ -32,10 +32,10 @@ if __name__ == "__main__":
     # alembic_cfg = Config("./alembic.ini")
     # command.upgrade(alembic_cfg, "head")
 
-    load_dotenv('../.env')
+    load_dotenv('.env')
 
     # Initialize the spy manager and DAL
-    dal = Dal(sqlite3.connect('../db/eyespy.db'))
+    dal = Dal(sqlite3.connect('db/eyespy.db'))
     manager = EyeSpyManager(dal)
 
     # Initialize the audit manager and DAL
@@ -43,10 +43,10 @@ if __name__ == "__main__":
     audit_dal = AuditDal(**connection)
     audit_manager = EyeSpyAuditManager(audit_dal)
 
-    # client = Process(target=init_discord_client)
-    # client.start()
+    client = Process(target=init_discord_client)
+    client.start()
     # init_discord_client()
 
-    # api = Process(target=init_api)
-    # api.start()
-    init_api()
+    api = Process(target=init_api)
+    api.start()
+    # init_api()
