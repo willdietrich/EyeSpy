@@ -1,7 +1,9 @@
 import sqlite3
-from time import time
-from .decorators import dal_execute, dal_retrieve
-from models import SpyRequest, NotifySpyRequest
+
+from eyespy.dal.decorators.dal_execute import dal_execute
+from eyespy.dal.decorators.dal_retrieve import dal_retrieve
+from eyespy.models.notify_spy_request import NotifySpyRequest
+from eyespy.models.spy_request import SpyRequest
 
 
 class Dal:

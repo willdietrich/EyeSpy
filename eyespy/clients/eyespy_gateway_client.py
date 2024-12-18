@@ -4,8 +4,10 @@ import hikari
 import lightbulb
 from lightbulb import commands
 
-from managers import EyeSpyAuditManager, EyeSpyManager
-from models import SpyRequest, NotifySpyRequest
+from eyespy.managers.eyespy_audit_manager import EyeSpyAuditManager
+from eyespy.managers.eyespy_manager import EyeSpyManager
+from eyespy.models.notify_spy_request import NotifySpyRequest
+from eyespy.models.spy_request import SpyRequest
 
 
 class EyeSpyClient(lightbulb.BotApp):

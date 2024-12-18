@@ -1,13 +1,10 @@
-import json
 from datetime import datetime
 
 import hikari
 from hikari.api import RESTClient
-from hikari.presences import Status
 
-import dal
-from dal import AuditDal
-from models import VoiceAudit
+from eyespy.dal.audit_dal import AuditDal
+from eyespy.models.voice_audit import VoiceAudit
 
 
 class EyeSpyAuditManager:

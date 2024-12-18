@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from models import VoiceAudit
+from eyespy.models.voice_audit import VoiceAudit
 
 
 class AuditDal:

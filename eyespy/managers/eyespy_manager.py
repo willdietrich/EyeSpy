@@ -1,15 +1,16 @@
 import hikari
 from hikari.presences import Status
 
-from dal import Dal
-import models as models
+from eyespy.dal.dal import Dal
+from eyespy.models.notify_spy_request import NotifySpyRequest
+from eyespy.models.spy_request import SpyRequest
 
 
 class EyeSpyManager:
     def __init__(self, dal: Dal):
         self.dal = dal
 
-    def add_spy(self, request: models.SpyRequest) -> bool:
+    def add_spy(self, request: SpyRequest) -> bool:
         matches = self.dal.check_target_exists(request)
         if len(matches) > 0:
             return False
@@ -23,7 +24,7 @@ class EyeSpyManager:
 
         return True
 
-    def remove_spy(self, request: models.SpyRequest) -> bool:
+    def remove_spy(self, request: SpyRequest) -> bool:
         matches = self.dal.check_target_exists(request)
         if len(matches) < 1:
             return False
@@ -45,7 +46,7 @@ class EyeSpyManager:
 
         return matches
 
-    async def notify_spies(self, restApi: hikari.api.RESTClient, request: models.NotifySpyRequest) -> bool:
+    async def notify_spies(self, restApi: hikari.api.RESTClient, request: NotifySpyRequest) -> bool:
         if not self.should_notify_status_change(request.status):
             return False
         user = await restApi.fetch_user(request.status_change_user_id)
