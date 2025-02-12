@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.11.11-slim-bullseye as builder
+FROM python:3.11.11-slim-bullseye AS builder
 
 # Install pipenv
 RUN pip install pipenv
@@ -17,10 +17,13 @@ COPY Pipfile Pipfile.lock ./
 RUN pipenv install --deploy --ignore-pipfile
 
 # The runtime image, used to just run the code provided its virtual environment
-FROM python:3.11.11-slim-bullseye as runtime
+FROM python:3.11.11-slim-bullseye AS runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/app/.venv/bin:$PATH" \
+    OTEL_RESOURCE_ATTRIBUTES="service.name=eyespy" \
+    OTEL_EXPORTER_OTLP_ENDPOINT="http://signoz-otel-collector:4317" \
+    OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 
 WORKDIR /app
 
@@ -41,4 +44,4 @@ COPY alembic.ini .env main.py ./
 # Run database migrations
 RUN alembic upgrade head
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["opentelemetry-instrument", "python", "main.py"]
