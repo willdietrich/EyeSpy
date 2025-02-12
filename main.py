@@ -24,7 +24,7 @@ def init_discord_client():
 
 
 def init_api():
-    uvicorn.run("eyespy.api.api:app", host="localhost", port=8000, log_level="info")
+    uvicorn.run("eyespy.api.api:app", host="0.0.0.0", port=8000, log_level="debug")
 
 
 if __name__ == "__main__":

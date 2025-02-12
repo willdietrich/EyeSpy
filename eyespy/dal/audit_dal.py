@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from bson import Int64
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -15,21 +14,22 @@ class AuditDal:
         self.collection = collection
 
     def insert_audit_record(self, audit_json: VoiceAudit):
-        self.collection.insert_one(audit_json)
+        self.collection.insert_one(audit_json.model_dump(exclude_none=True))
 
     def find_matching_audit(self, audit_json: VoiceAudit):
         return self.collection.find({
-            "channel_id": audit_json["channel_id"],
-            "user_id": audit_json["user_id"],
+            "channel_id": audit_json.channel_id,
+            "user_id": audit_json.user_id,
             "leave_time": {"$exists": False},
         }).sort("join_time", -1)
 
     def upsert_audit_record(self, matching_audit: VoiceAudit, audit_json: VoiceAudit):
         return self.collection.update_one({
-            "_id": matching_audit["_id"]
+            "_id": matching_audit.id
         }, {
             "$set": {
-                "leave_time": audit_json["leave_time"]
+                "leave_time": audit_json.leave_time,
+                "dwell_time": audit_json.dwell_time
             }
         })
 

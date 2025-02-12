@@ -11,6 +11,11 @@ class EyeSpyAuditManager:
     def __init__(self, dal: AuditDal):
         self.dal = dal
 
+    def _assign_dwell_time(self, voice_audit: VoiceAudit, old_voice_audit: VoiceAudit) -> int:
+        if voice_audit is not None and old_voice_audit is not None and hasattr(voice_audit, 'join_time') and hasattr(old_voice_audit, 'leave_time'):
+            diff = voice_audit.join_time - old_voice_audit.leave_time
+            old_voice_audit.dwell_time = int(abs(diff.total_seconds()))
+
     async def persist_voice_audit(self, rest: RESTClient, event: hikari.VoiceStateUpdateEvent) -> bool:
         voice_audit = None
         old_voice_audit = None
@@ -36,6 +41,8 @@ class EyeSpyAuditManager:
                                          user_id=event.state.user_id,
                                          leave_time=datetime.utcnow())
 
+        self._assign_dwell_time(voice_audit, old_voice_audit)
+
         if old_voice_audit is not None and voice_audit is not None:
             matching_audit_cursor = self.dal.find_matching_audit(old_voice_audit)
             matching_audit = matching_audit_cursor.next()
@@ -43,16 +50,15 @@ class EyeSpyAuditManager:
                 self.dal.upsert_audit_record(matching_audit, old_voice_audit)
 
             self.dal.insert_audit_record(voice_audit)
-            #TODO left a channel and went to a new one
         elif old_voice_audit is not None and voice_audit is None:
             matching_audit_cursor = self.dal.find_matching_audit(old_voice_audit)
-            matching_audit = matching_audit_cursor.next()
+            matching_audit_dict = matching_audit_cursor.next()
+            matching_audit = VoiceAudit.model_validate(matching_audit_dict)
+            self._assign_dwell_time(matching_audit, old_voice_audit)
             if matching_audit is not None:
                 self.dal.upsert_audit_record(matching_audit, old_voice_audit)
-            #TODO left all voice channels
         elif old_voice_audit is None and voice_audit is not None:
             self.dal.insert_audit_record(voice_audit)
-            #TODO joined voice channel for the first time
         else:
             return False
 

@@ -1,7 +1,6 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class NotifySpyRequest:
+class NotifySpyRequest(BaseModel):
     status_change_user_id: int
     status: str

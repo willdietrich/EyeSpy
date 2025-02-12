@@ -3,6 +3,10 @@ import logging
 import hikari
 import lightbulb
 from lightbulb import commands
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.trace import StatusCode
 
 from eyespy.managers.eyespy_audit_manager import EyeSpyAuditManager
 from eyespy.managers.eyespy_manager import EyeSpyManager
@@ -47,6 +51,14 @@ class EyeSpyClient(lightbulb.BotApp):
         self.logger.addHandler(handler)
         # endregion
 
+        # Initialize the span manager
+        provider = TracerProvider()
+        processor = BatchSpanProcessor(ConsoleSpanExporter())
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+        tracer = trace.get_tracer("eyespy.bot.tracer")
+        self.tracer = tracer
+
     # Gateway listeners
     # region Listeners
     async def on_starting(self, event: hikari.StartingEvent):
@@ -63,8 +75,13 @@ class EyeSpyClient(lightbulb.BotApp):
         self.logger.info('Message received: {0}'.format(event.message))
 
     async def presence_update(self, event: hikari.PresenceUpdateEvent):
-        req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
-        await self.manager.notify_spies(self.rest, req)
+        with self.tracer.start_as_current_span("presence_update") as span:
+            span.set_attribute("user_id", str(event.user_id))
+
+            req = NotifySpyRequest(status_change_user_id=event.user_id, status=event.presence.visible_status)
+            await self.manager.notify_spies(self.rest, req)
+
+            span.set_status(StatusCode.OK)
 
     async def audit_channel_event(self, event: hikari.VoiceStateUpdateEvent):
         await self.audit_manager.persist_voice_audit(self.rest, event)
@@ -76,44 +93,60 @@ class EyeSpyClient(lightbulb.BotApp):
     @lightbulb.command("follow", "Follow a users online status")
     @lightbulb.implements(commands.SlashCommand)
     async def follow(ctx: lightbulb.Context) -> None:
-        try:
-            req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
-            target = await ctx.app.rest.fetch_user(req.spy_target_id)
-            if ctx.app.manager.add_spy(req):
-                requester = await ctx.app.rest.fetch_user(req.spy_user_id)
-                await ctx.respond(f"{str(requester)} is now following {str(target)}")
-            else:
-                await ctx.respond("Unable to follow user, or you are already following them")
-        except:
-            await ctx.respond("An error occurred while attempting to follow the specified user, make sure the specified ID is correct.")
+        with ctx.app.tracer.start_as_current_span("command_follow") as span:
+            try:
+                req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
+                target = await ctx.app.rest.fetch_user(req.spy_target_id)
+                span.set_attribute("requester", str(ctx.member.id))
+                span.set_attribute("target", str(ctx.options.discordid))
+                if ctx.app.manager.add_spy(req):
+                    requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+                    await ctx.respond(f"{str(requester)} is now following {str(target)}")
+                    span.set_status(StatusCode.OK)
+                else:
+                    await ctx.respond("Unable to follow user, or you are already following them")
+                    span.set_status(StatusCode.ERROR)
+            except:
+                await ctx.respond("An error occurred while attempting to follow the specified user, make sure the specified ID is correct.")
+                span.set_status(StatusCode.ERROR)
 
     @lightbulb.option("discordid", "Who to unfollow")
     @lightbulb.command("unfollow", "Stop following a user")
     @lightbulb.implements(commands.SlashCommand)
     async def unfollow(ctx: lightbulb.Context) -> None:
-        try:
-            req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
-            if ctx.app.manager.remove_spy(req):
-                requester = await ctx.app.rest.fetch_user(req.spy_user_id)
-                target = await ctx.app.rest.fetch_user(req.spy_target_id)
-                await ctx.respond(f"{str(requester)} is no longer following {str(target)}")
-            else:
-                await ctx.respond("Unable to un-follow, or you never previously followed that user")
-        except:
-            await ctx.respond("An error occurred while attempting to unfollow the specified user, make sure the specified ID is correct.")
+        with ctx.app.tracer.start_as_current_span("command_unfollow") as span:
+            try:
+                req = SpyRequest(spy_user_id=int(ctx.member.id), spy_id=None, spy_target_id=int(ctx.options.discordid))
+                span.set_attribute("requester", str(ctx.member.id))
+                span.set_attribute("target", str(ctx.options.discordid))
+                if ctx.app.manager.remove_spy(req):
+                    requester = await ctx.app.rest.fetch_user(req.spy_user_id)
+                    target = await ctx.app.rest.fetch_user(req.spy_target_id)
+                    await ctx.respond(f"{str(requester)} is no longer following {str(target)}")
+                    span.set_status(StatusCode.OK)
+                else:
+                    await ctx.respond("Unable to un-follow, or you never previously followed that user")
+
+            except:
+                await ctx.respond("An error occurred while attempting to unfollow the specified user, make sure the specified ID is correct.")
+                span.set_status(StatusCode.ERROR)
 
     @lightbulb.command("list", "List what users you are following")
     @lightbulb.implements(commands.SlashCommand)
     async def list(ctx: lightbulb.Context) -> None:
-        spies = ctx.app.manager.list_spy(int(ctx.member.id))
-        if spies == None or len(spies) < 1:
-            await ctx.respond(f"It doesn't appear that you are currently following anyone, try `/follow`")
-            return
+        with ctx.app.tracer.start_as_current_span("command_list") as span:
+            span.set_attribute("requester", str(ctx.member.id))
+            spies = ctx.app.manager.list_spy(int(ctx.member.id))
+            if spies == None or len(spies) < 1:
+                await ctx.respond(f"It doesn't appear that you are currently following anyone, try `/follow`")
+                span.set_status(StatusCode.OK)
+                return
 
-        result = []
-        for spy in spies:
-            target = await ctx.app.rest.fetch_user(spy)
-            result.append((f"{target.username}#{target.discriminator}", spy))
+            result = []
+            for spy in spies:
+                target = await ctx.app.rest.fetch_user(spy)
+                result.append((f"{target.username}#{target.discriminator}", spy))
 
-        await ctx.respond(f"You are following: {result}")
+            await ctx.respond(f"You are following: {result}")
+            span.set_status(StatusCode.OK)
     # endregion
