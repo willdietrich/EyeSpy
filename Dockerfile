@@ -20,10 +20,7 @@ RUN pipenv install --deploy --ignore-pipfile
 FROM python:3.11.11-slim-bullseye AS runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH" \
-    OTEL_RESOURCE_ATTRIBUTES="service.name=eyespy" \
-    OTEL_EXPORTER_OTLP_ENDPOINT="http://signoz-otel-collector:4317" \
-    OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 
@@ -44,4 +41,4 @@ COPY alembic.ini .env main.py ./
 # Run database migrations
 RUN alembic upgrade head
 
-ENTRYPOINT ["opentelemetry-instrument", "python", "main.py"]
+ENTRYPOINT ["python", "main.py"]

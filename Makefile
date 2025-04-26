@@ -17,10 +17,7 @@ docker-build: # Run docker build
 
 .PHONY: run
 run: # Run docker push
-	OTEL_RESOURCE_ATTRIBUTES=service.name=eyespy \
-	OTEL_EXPORTER_OTLP_ENDPOINT="http://192.168.0.8:4317" \
-	OTEL_EXPORTER_OTLP_PROTOCOL=grpc \
-	opentelemetry-instrument $(PYTHON) $(MAIN_SCRIPT)
+	$(PYTHON) $(MAIN_SCRIPT)
 
 
 .PHONY: lint
