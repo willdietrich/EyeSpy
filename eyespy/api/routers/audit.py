@@ -35,3 +35,11 @@ async def audit_search(query: AuditSearchRequest) -> AuditSearchResponse:
             results.append(result)
 
     return AuditSearchResponse(results=results)
+
+
+@router.post(
+    "/backfill_dwell_time"
+)
+async def backfill_dwell_time():
+    updated_count = audit_dal.backfill_dwell_time()
+    return {"message": f"Successfully updated {updated_count} audit records."}

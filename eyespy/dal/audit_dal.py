@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from pymongo import MongoClient
@@ -12,6 +13,7 @@ class AuditDal:
         self.client = client
         self.db = db
         self.collection = collection
+        self.logger = logging.getLogger(__name__)
 
     def insert_audit_record(self, audit_json: VoiceAudit):
         self.collection.insert_one(audit_json.model_dump(exclude_none=True))
@@ -43,3 +45,24 @@ class AuditDal:
 
         cursor = self.collection.find(query)
         return cursor
+
+    def backfill_dwell_time(self):
+        updated_count = 0
+        audits_to_update = self.collection.find({})
+        for audit in audits_to_update:
+            join_time = audit.get("join_time")
+            leave_time = audit.get("leave_time")
+
+            if join_time is not None and leave_time is not None:
+                dwell_time = int((leave_time - join_time).total_seconds())
+                try:
+                    self.collection.update_one(
+                        {"_id": audit["_id"]},
+                        {"$set": {"dwell_time": dwell_time}}
+                    )
+                    self.logger.info(f"Updated audit record with _id: {audit['_id']}, dwell_time: {dwell_time}")
+                    updated_count += 1
+                except Exception as e:
+                    self.logger.error(f"Error updating audit record with _id: {audit['_id']}: {e}")
+
+        return updated_count
